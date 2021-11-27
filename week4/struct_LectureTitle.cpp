@@ -29,11 +29,13 @@ struct LectureTitle {
     string course;
     string week;
 
-    LectureTitle(Specialization new_specialization, Course new_course, Week new_week){
-        specialization = new_specialization.value;
-        course = new_course.value;
-        week = new_week.value;
-    }
+    LectureTitle(const Specialization& new_specialization,
+               const Course& new_course,
+               const Week& new_week) {
+    specialization = new_specialization.value;
+    course = new_course.value;
+    week = new_week.value;
+  }
 };
 
 
