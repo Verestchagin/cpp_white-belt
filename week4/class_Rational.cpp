@@ -1,4 +1,8 @@
 #include <iostream>
+#include <sstream>
+#include <map>
+#include <set>
+#include <vector>
 using namespace std;
 
 class Rational {
@@ -67,52 +71,86 @@ private:
     }
 };
 
+bool operator== (const Rational& r1, const Rational& r2) {
+    return r1.Numerator() == r2.Numerator() && r1.Denominator() == r2.Denominator();
+}
+
+Rational operator+ (const Rational& r1, const Rational& r2) {
+    int x = r1.Numerator() * r2.Denominator() + r2.Numerator() * r1.Denominator();
+    int y = r1.Denominator() * r2.Denominator();
+    return Rational(x, y);
+}
+
+Rational operator- (const Rational& r1, const Rational& r2) {
+    int x = r1.Numerator() * r2.Denominator() - r2.Numerator() * r1.Denominator();
+    int y = r1.Denominator() * r2.Denominator();
+    return Rational(x, y);
+}
+
+Rational operator* (const Rational& r1, const Rational& r2) {
+    int x = r1.Numerator() * r2.Numerator();
+    int y = r1.Denominator() * r2.Denominator();
+    return Rational(x, y);
+}
+
+Rational operator/ (const Rational& r1, const Rational& r2) {
+    int x = r1.Numerator() * r2.Denominator();
+    int y = r1.Denominator() * r2.Numerator();
+    return Rational(x, y);
+}
+
+istream& operator>> (istream& stream, Rational& r) {
+    int x, y;
+    if (stream >> x && stream.ignore(2, '/') && stream >> y)
+        r = {x, y};
+    return stream;
+}
+
+ostream& operator<< (ostream& stream, const Rational& r) {
+    stream << r.Numerator() << "/" << r.Denominator();
+    return stream;
+}
+
+bool operator> (const Rational& r1, const Rational& r2) {
+    double x = (double)r1.Numerator() / (double)r1.Denominator();
+    double y = (double)r2.Numerator() / (double)r2.Denominator();
+    return x > y;
+}
+
+bool operator< (const Rational& r1, const Rational& r2) {
+    double x = (double)r1.Numerator() / (double)r1.Denominator();
+    double y = (double)r2.Numerator() / (double)r2.Denominator();
+    return x < y;
+}
+
 int main() {
     {
-        const Rational r(3, 10);
-        if (r.Numerator() != 3 || r.Denominator() != 10) {
-            cout << "Rational(3, 10) != 3/10" << endl;
+        const set<Rational> rs = {{1, 2}, {1, 25}, {3, 4}, {3, 4}, {1, 2}};
+        if (rs.size() != 3) {
+            cout << "Wrong amount of items in the set" << endl;
             return 1;
         }
-    }
 
-    {
-        const Rational r(8, 12);
-        if (r.Numerator() != 2 || r.Denominator() != 3) {
-            cout << "Rational(8, 12) != 2/3" << endl;
+        vector<Rational> v;
+        for (auto x : rs) {
+            v.push_back(x);
+        }
+        if (v != vector<Rational>{{1, 25}, {1, 2}, {3, 4}}) {
+            cout << "Rationals comparison works incorrectly" << endl;
             return 2;
         }
     }
 
     {
-        const Rational r(-4, 6);
-        if (r.Numerator() != -2 || r.Denominator() != 3) {
-            cout << "Rational(-4, 6) != -2/3" << endl;
+        map<Rational, int> count;
+        ++count[{1, 2}];
+        ++count[{1, 2}];
+
+        ++count[{2, 3}];
+
+        if (count.size() != 2) {
+            cout << "Wrong amount of items in the map" << endl;
             return 3;
-        }
-    }
-
-    {
-        const Rational r(4, -6);
-        if (r.Numerator() != -2 || r.Denominator() != 3) {
-            cout << "Rational(4, -6) != -2/3" << endl;
-            return 3;
-        }
-    }
-
-    {
-        const Rational r(0, 15);
-        if (r.Numerator() != 0 || r.Denominator() != 1) {
-            cout << "Rational(0, 15) != 0/1" << endl;
-            return 4;
-        }
-    }
-
-    {
-        const Rational defaultConstructed;
-        if (defaultConstructed.Numerator() != 0 || defaultConstructed.Denominator() != 1) {
-            cout << "Rational() != 0/1" << endl;
-            return 5;
         }
     }
 
