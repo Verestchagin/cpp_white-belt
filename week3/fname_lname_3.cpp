@@ -1,146 +1,85 @@
-#include <iostream>
-#include <vector>
-#include <set>
-#include <map>
 #include <algorithm>
+#include <map>
+#include <vector>
+#include <string>
+
 using namespace std;
 
-struct FullName{
-    string f_name;
-    string l_name;
-};
-
-void Print_last_names(const vector<string>& lnames){
-    if (lnames.size() == 2)
-        cout << lnames[1];
-    else{
-        cout << lnames[lnames.size() - 1] << " (";
-        for (auto i = lnames.size() - 2; i > 1; i--)
-            cout << lnames[i] << ", ";
-        cout << lnames[1] << ")";
+vector<string> FindNamesHistory(const map<int, string>& names_by_year,
+                                int year) {
+  vector<string> names;
+  for (const auto& item : names_by_year) {
+    if (item.first <= year && (names.empty() || names.back() != item.second)) {
+      names.push_back(item.second);
     }
+  }
+  return names;
 }
 
-void Print_first_names(const vector<string>& fnames){
-    if (fnames.size() == 2)
-        cout << fnames[1];
-    else{
-        cout << fnames[fnames.size() - 1] << " (";
-        for (auto i = fnames.size() - 2; i > 1; i--)
-            cout << fnames[i] << ", ";
-        cout << fnames[1] << ")";
+string BuildJoinedName(vector<string> names) {
+  reverse(begin(names), end(names));
+  string joined_name = names[0];
+  for (int i = 1; i < names.size(); ++i) {
+    if (i == 1) {
+      joined_name += " (";
+    } else {
+      joined_name += ", ";
     }
+    joined_name += names[i];
+  }
+  if (names.size() > 1) {
+    joined_name += ")";
+  }
+  return joined_name;
 }
 
 class Person {
 public:
-    Person(){}
-    Person(const string& f, const string& l, const int& y){
-        info_person[y].f_name = f;
-        info_person[y].l_name = l;
+  // конструктор
+  Person(const string& first_name, const string& last_name,
+         int new_birth_year) {
+    birth_year = new_birth_year;
+    first_names[birth_year] = first_name;
+    last_names[birth_year] = last_name;
+  }
+  void ChangeFirstName(int year, const string& first_name) {
+    // игнорируем запись, если год меньше года рождения
+    if (year >= birth_year) {
+      first_names[year] = first_name;
     }
-    void ChangeFirstName(int year, const string& first_name) {
-        if (year >= info_person.begin()->first){
-            if (info_person.count(year) == 0 && year > info_person.begin()->first)
-                info_person[year].l_name = "";
-            info_person[year].f_name = first_name;
-        }
-        //Print_map(info_person);
+  }
+  void ChangeLastName(int year, const string& last_name) {
+    if (year >= birth_year) {
+      last_names[year] = last_name;
     }
-    void ChangeLastName(int year, const string& last_name) {
-        if (year >= info_person.begin()->first){
-            if (info_person.count(year) == 0)
-                info_person[year].f_name = "";
-            info_person[year].l_name = last_name;
-        }
-        //Print_map(info_person);
+  }
+  string GetFullName(int year) const {
+    // обрабатываем случай, когда год меньше года рождения
+    if (year < birth_year) {
+      return "No person";
     }
-    /*void Print_map(const map<int, FullName>& m){
-        for (auto i:m) {
-            cout << i.first << ": " << i.second.f_name << " " << i.second.l_name << endl;
-        }
-        cout << endl;
-    }*/
-    string GetFullName(const int& year) const {
-        if (year < info_person.begin()->first)
-            return "No person";
-        else {
-            string fname = "", lname = "";
-            for (auto i: info_person) {
-                if (i.first <= year && i.second.f_name != "")
-                    fname = i.second.f_name;
-                if (i.first <= year && i.second.l_name != "")
-                    lname = i.second.l_name;
-            }
-
-            if (fname == "") return lname + " with unknown first name";
-            else
-            if (lname == "") return fname + " with unknown last name";
-            else return fname + " " + lname;
-        }
+    const vector<string> first_names = FindFirstNamesHistory(year);
+    const vector<string> last_names = FindLastNamesHistory(year);
+    // объединяем имя и фамилию через пробел
+    return first_names.back() + " " + last_names.back();
+  }
+  string GetFullNameWithHistory(int year) const {
+    if (year < birth_year) {
+      return "No person";
     }
-    string GetFullNameWithHistory(const int& year) const {
-        if (year < info_person.begin()->first)
-            return "No person";
-        else{
-            string fname = "", lname = "";
-            vector<string> history_fnames, history_lnames;
-
-
-            history_fnames.push_back("");
-            history_lnames.push_back("");
-
-            for (auto i: info_person) {
-                if (i.first <= year && i.second.f_name != ""){
-                    fname = i.second.f_name;
-                    if (fname != history_fnames[history_fnames.size() - 1])
-                        history_fnames.push_back(i.second.f_name);
-                }
-                if (i.first <= year && i.second.l_name != ""){
-                    lname = i.second.l_name;
-                    if (lname != history_lnames[history_lnames.size() - 1])
-                        history_lnames.push_back(i.second.l_name);
-                }
-            }
-
-            if (history_fnames.size() == 1){
-                Print_last_names(history_lnames);
-                return " with unknown first name";
-            }
-            else
-            if (history_lnames.size() == 1){
-                Print_first_names(history_fnames);
-                return  " with unknown last name";
-            }
-            else {
-                Print_first_names(history_fnames);
-                cout << " ";
-                Print_last_names(history_lnames);
-                return "";
-            }
-        }
-    }
+    const string first_name = BuildJoinedName(FindFirstNamesHistory(year));
+    const string last_name = BuildJoinedName(FindLastNamesHistory(year));
+    return first_name + " " + last_name;
+  }
 private:
-    map<int, FullName> info_person;
+  vector<string> FindFirstNamesHistory(int year) const {
+    return FindNamesHistory(first_names, year);
+  }
+  vector<string> FindLastNamesHistory(int year) const {
+    return FindNamesHistory(last_names, year);
+  }
+
+  int birth_year;
+  map<int, string> first_names;
+  map<int, string> last_names;
 };
-
-int main() {
-
-    Person person("-1_first", "-1_last", -1);
-
-    int year = -1;
-    person.ChangeFirstName(year, std::to_string(2) + "_first");
-    person.ChangeLastName(year, std::to_string(2) + "_last");
-
-    year = 5;
-    person.ChangeFirstName(year, std::to_string(year) + "_first");
-    person.ChangeLastName(year, std::to_string(year) + "_last");
-
-
-    year = 7;
-    std::cout << "year: " << year << '\n';
-    std::cout << person.GetFullName(year) << '\n';
-    std::cout << person.GetFullNameWithHistory(year) << '\n';
-
-    return 0;
-}
